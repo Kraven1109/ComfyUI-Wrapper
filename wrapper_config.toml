@@ -1,0 +1,51 @@
+# Wrapper configuration for ComfyUI workspace
+# Edit this file to customize your environment
+
+# PyTorch CUDA version override
+[pytorch]
+index_name = "pytorch-cu130"
+index_url = "https://download.pytorch.org/whl/cu130"
+
+# Additional custom node dependencies
+# Add or remove packages as needed
+[dependencies]
+custom = [
+    "comfyui-manager>=4.0.5",
+    "gitpython",
+    "pygithub",
+    "opencv-python",
+    "opencv-python-headless",
+    "onnxruntime",
+    "onnxruntime-gpu",
+    "hydra-core",
+    "segment-anything",
+    "matplotlib",
+    "accelerate",
+    "scikit-image",
+    "scikit-learn",
+    "insightface",
+    "gdown",
+    "deepdiff",
+    "lark",
+    "gguf",
+    "groundingdino-py",
+    "supervision",
+    "ultralytics",
+    "timm",
+    "peft",
+    "color-matcher",
+    "piexif",
+    "dill",
+    "iopath",
+    "diffusers",
+    "torchlanc",
+    "py-cpuinfo",
+    # "decord",  # DISABLED: No Python 3.13 wheel available (only up to 3.10)
+    "ftfy",
+    "nvidia-ml-py",
+    "imageio-ffmpeg",
+    "sageattention>=1.0.6",
+    # RadialAttn + WAN Video dependencies
+    "ninja",  # Required for compiling custom CUDA kernels
+    "git+https://github.com/facebookresearch/sam2",  # SAM2 for Impact Pack
+]

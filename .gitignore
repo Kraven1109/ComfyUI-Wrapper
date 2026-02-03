@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+.venv_backup/
+venv/
+ENV/
+
+
+# uv
+.uv/
+
+# Backups
+uv.lock.backup_*
+env_backup_*.txt
+update_comfy_old.sh
+ComfyUI/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+*.log
+
+# Auto-generated (keep uv.lock for reproducibility)
+# pyproject.toml is generated but should be committed for reference
+
+# ComfyUI runtime
+ComfyUI/output/
+ComfyUI/input/
+ComfyUI/models/
+ComfyUI/custom_nodes/
+ComfyUI/temp/
+ComfyUI/.cache/
