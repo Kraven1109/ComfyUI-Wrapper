@@ -3,7 +3,7 @@ name = "ComfyUI"
 version = "0.10.0"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10"
 dependencies = [
     # Core ComfyUI dependencies (auto-synced from ComfyUI/requirements.txt)
     "comfyui-frontend-package==1.37.11",
@@ -70,19 +70,7 @@ dependencies = [
     "imageio-ffmpeg",
     "sageattention>=1.0.6",
     "ninja",
-    "edge-tts>=7.2.7",
-    "pydub>=0.25.1",
-    "srt>=3.5.3",
-    "soundfile>=0.13.1",
-    "kokoro-onnx>=0.5.0",
-    "qwen-tts",
-    "librosa>=0.11.0",
-    "numba>=0.61.0",
-    "snac>=1.2.1",
-    "bitsandbytes>=0.43.0",  # For Orpheus 4-bit quantization
-    "triton-windows>=3.6.0.post25",
 ]
-
 [project.urls]
 homepage = "https://www.comfy.org/"
 repository = "https://github.com/comfyanonymous/ComfyUI"
@@ -162,6 +150,7 @@ explicit = true
 torch = { index = "pytorch-cu130" }
 torchvision = { index = "pytorch-cu130" }
 torchaudio = { index = "pytorch-cu130" }
+sageattention = { url = "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl" }
 
 [tool.uv]
 # Exclude problematic packages that ComfyUI doesn't actually need

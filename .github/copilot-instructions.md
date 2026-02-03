@@ -6,11 +6,12 @@ Purpose: provide short, actionable context so an AI coding agent can be immediat
 
 ## 1) Big picture (what to read first) 📚
 - This workspace wraps the upstream ComfyUI app so it is portable and reproducible. See: `README.md` (root) and `ComfyUI/README.md` for authoritative architecture and run instructions.
+- **SageAttention 2.2.0.post4**: Installed from [woct0rdho/SageAttention](https://github.com/woct0rdho/SageAttention) (Windows-optimized fork). Supports PyTorch 2.9+, Python ABI3, CUDA 13.0, with CUDA backend INT8/FP8 quantization. Pinned via URL in pyproject.toml.
 - Key components:
   - `scripts/` — wrapper tooling (cross-platform CLI): `cli.py`, `run_comfy.py`, `sync_wrapper.py`.
   - `wrapper_config.toml` — central configuration (CUDA version, custom deps). After edits run `./comfy.sh sync` (or `comfy.bat sync`).
   - `ComfyUI/` — the app code: `main.py` (entry point), `server.py`, `app/` (backend), `comfy/` (core model logic), `custom_nodes/` and `user/` (extensions & workflows).
-  - `uv.lock` / `pyproject.toml` — pinned dependencies; do not hand-edit `pyproject.toml` unless you understand the sync pipeline.
+  - `uv.lock` / `pyproject.toml` — pinned dependencies; do not hand-edit `pyproject.toml` unless you understand the sync pipeline. SageAttention is pinned via wheel URL.
 
 ## 2) Typical developer workflows (how to run / test / debug) 🛠️
 - Run locally (portable workspace): use top-level wrappers:

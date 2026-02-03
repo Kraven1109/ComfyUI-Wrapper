@@ -2,25 +2,41 @@
 
 Modern, maintainable ComfyUI workspace with unified Python scripts and cross-platform support.
 
-## Quick Start
+## ⚡ Quick Start
 
 ```bash
 # Linux/Mac
-./comfy.sh run sage         # Run with SageAttention
+./comfy.sh run sage         # Run with SageAttention 2.2
 ./comfy.sh update           # Update ComfyUI + dependencies
 ./comfy.sh backup           # Backup environment
 ./comfy.sh sync             # Regenerate wrapper (auto locks & syncs)
 ./comfy.sh help             # Show all commands
 
 # Windows
-comfy.bat run sage          REM Run with SageAttention
+comfy.bat run sage          REM Run with SageAttention 2.2
 comfy.bat update            REM Update ComfyUI + dependencies
 comfy.bat backup            REM Backup environment
 comfy.bat sync              REM Regenerate wrapper (auto locks & syncs)
 comfy.bat help              REM Show all commands
 ```
 
-## Configuration
+## 🆕 What's New (February 2026)
+
+### SageAttention 2.2.0.post4 Installed
+- **Version**: 2.2.0+cu130torch2.9.0andhigher.post4  
+- **Source**: [woct0rdho/SageAttention](https://github.com/woct0rdho/SageAttention) (Windows optimized fork)
+- **Features**:
+  - ✅ Supports PyTorch 2.9+ (including 2.10.0)
+  - ✅ Python ABI3 (works with Python 3.9+)
+  - ✅ `torch.compile` support for full-graph compilation
+  - ✅ CUDA 13.0 compatible
+  - ✅ 2-5× faster than FlashAttention2 on supported GPUs
+- **Improvements over 1.0.6**:
+  - CUDA backend (not just Triton) with INT8+FP16/FP8 quantization
+  - Better accuracy with per-block quantization  
+  - Support for GQA, variable sequence lengths, causal masking
+
+## ⚙️ Configuration
 
 **Edit [wrapper_config.toml](wrapper_config.toml) for all customizations:**
 
