@@ -5,20 +5,42 @@ __pycache__/
 *.so
 .Python
 
-# Virtual environments
-.venv/
+# Virtual environments (.venv now in envs/windows/ and envs/linux/)
+envs/windows/.venv/
+envs/linux/.venv/
+# Lock files are platform-specific, keep them
+# envs/*/uv.lock
 .venv_backup/
 venv/
 ENV/
 
+# Documentation (auto-generated or build-specific, keep README.md and copilot-instructions.md)
+.github/
+docs/
 
-# uv
+# uv cache
 .uv/
+
+# Workspace files
+ComfyUI_portable.code-workspace
+
+# Test files and temporary outputs
+test*/
+*_test_*.txt
+server_*.txt
+final_test_*.txt
+*.png
+image.png
 
 # Backups
 uv.lock.backup_*
 env_backup_*.txt
+*.bak
+*_old.py
 update_comfy_old.sh
+build_attention_wheels.sh
+
+# ComfyUI submodule (not included in wrapper repo)
 ComfyUI/
 
 # OS

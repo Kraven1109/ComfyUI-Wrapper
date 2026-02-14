@@ -4,21 +4,73 @@ Modern, maintainable ComfyUI workspace with unified Python scripts and cross-pla
 
 ## ⚡ Quick Start
 
-```bash
-# Linux/Mac
-./comfy.sh run sage         # Run with SageAttention 2.2
-./comfy.sh update           # Update ComfyUI + dependencies
-./comfy.sh backup           # Backup environment
-./comfy.sh sync             # Regenerate wrapper (auto locks & syncs)
-./comfy.sh help             # Show all commands
-
-# Windows
+### Windows
+```cmd
 comfy.bat run sage          REM Run with SageAttention 2.2
 comfy.bat update            REM Update ComfyUI + dependencies
-comfy.bat backup            REM Backup environment
 comfy.bat sync              REM Regenerate wrapper (auto locks & syncs)
-comfy.bat help              REM Show all commands
 ```
+
+### Linux/macOS
+```bash
+./comfy.sh sync             # Auto-detects Linux, installs platform-specific packages
+./comfy.sh run sage         # Run with SageAttention
+```
+
+> **Note**: `sync` now auto-detects platform and installs decord2 + sageattention automatically!
+
+## 🔄 Cross-Platform Usage (Windows ↔ Linux)
+
+**Platform-specific environments** - each platform has its own independent environment:
+
+**Directory Structure:**
+```
+ComfyUI_portable/
+├── envs/
+│   ├── windows/              # Windows environment
+│   │   ├── .venv/            # Windows Python virtual environment
+│   │   ├── pyproject.toml    # Windows-specific dependencies
+│   │   └── uv.lock           # Windows dependency lock
+│   └── linux/                # Linux/macOS environment
+│       ├── .venv/            # Linux Python virtual environment
+│       ├── pyproject.toml    # Linux-specific dependencies
+│       └── uv.lock           # Linux dependency lock
+├── wrapper_config.toml       # Shared configuration
+├── comfy.bat                 # Windows launcher → uses envs/windows/
+└── comfy.sh                  # Linux launcher → uses envs/linux/
+```
+
+**When switching platforms:**
+
+1. **Windows to Linux:**
+   ```bash
+   ./comfy.sh sync         # Syncs envs/linux/ with Linux-specific packages
+   ./comfy.sh run sage     # Uses envs/linux/.venv
+   ```
+
+2. **Linux to Windows:**
+   ```cmd
+   comfy.bat sync          # Syncs envs/windows/ with Windows-specific packages
+   comfy.bat run sage      # Uses envs/windows/.venv
+   ```
+
+**Platform Differences (automatically handled):**
+- **Windows** (`envs/windows/`):
+  - SageAttention 2.2.0.post4 from woct0rdho wheel (stable ABI, CUDA 13.0)
+  - SpargeAttn 0.1.0.post4 for RadialAttn (sparse attention, Windows wheel)
+  - decord2 3.0.0 pre-built wheel from GitHub release (FFmpeg bundled)
+  - triton-windows for JIT compilation
+  - soundfile for audio processing
+- **Linux/macOS** (`envs/linux/`):
+  - SageAttention >=2.2.0 (builds from source with CUDA support)
+  - decord2 >=3.0.0 from PyPI (Linux/macOS wheels)
+  - soundfile from PyPI
+
+**Benefits:**
+- ✅ **No dependency conflicts** - Windows and Linux wheels don't interfere
+- ✅ **Platform isolation** - Each OS manages its own environment
+- ✅ **Reproducible** - Lock files are platform-specific
+- ✅ **Git-friendly** - Environments excluded from git (.venv/ in .gitignore)
 
 ## 🆕 What's New (February 2026)
 
@@ -46,21 +98,30 @@ comfy.bat help              REM Show all commands
 index_name = "pytorch-cu130"  # cu121, cu124, etc.
 index_url = "https://download.pytorch.org/whl/cu130"
 
-# Add/remove custom node dependencies
+# Common dependencies (all platforms)
 [dependencies]
 custom = [
     "comfyui-manager>=4.0.5",
     "opencv-python",
     # ... add your packages here
 ]
+
+# Windows-only dependencies
+[dependencies.windows]
+sageattention = "https://github.com/woct0rdho/.../wheel.whl"
+
+# Linux/macOS-only dependencies  
+[dependencies.linux]
+decord2 = ">=3.0.0"
+sageattention = ">=2.2.0"
 ```
 
 After editing config:
 ```bash
-./comfy.sh sync              # Automatically locks and syncs!
+./comfy.sh sync              # Auto-detects platform, regenerates pyproject.toml, locks & syncs
 ```
 
-No need to chain commands - `comfy sync` does everything.
+No need to chain commands - `comfy sync` does everything automatically!
 
 ## Architecture
 
@@ -68,22 +129,30 @@ No need to chain commands - `comfy sync` does everything.
 ComfyUI_portable/
 ├── comfy.sh / comfy.bat      # Unified CLI (main interface)
 ├── wrapper_config.toml       # ← Edit this for all customizations
-├── pyproject.toml            # Auto-generated wrapper
-├── uv.lock                   # Locked dependencies
-├── .venv/                    # Virtual environment (not in git)
+│
+├── envs/                     # Platform-specific environments
+│   ├── windows/              # Windows environment (used by comfy.bat)
+│   │   ├── .venv/            # Virtual environment (not in git)
+│   │   ├── pyproject.toml    # Auto-generated for Windows
+│   │   └── uv.lock           # Windows dependency lock
+│   └── linux/                # Linux environment (used by comfy.sh)
+│       ├── .venv/            # Virtual environment (not in git)
+│       ├── pyproject.toml    # Auto-generated for Linux
+│       └── uv.lock           # Linux dependency lock
 │
 ├── scripts/                  # Python implementation (cross-platform)
 │   ├── cli.py                # Unified CLI dispatcher
-│   ├── common.py             # Shared utilities
+│   ├── common.py             # Shared utilities (detects platform env dir)
 │   ├── run_comfy.py          # Run ComfyUI
 │   ├── update_comfy.py       # Update workflow
 │   ├── backup_env.py         # Backup environment
 │   ├── restore_env.py        # Restore environment
-│   └── sync_wrapper.py       # Sync pyproject.toml (automated)
+│   └── sync_wrapper.py       # Generate BOTH platform pyproject.toml files
 │
 └── ComfyUI/                  # Git repository (clean, auto-updated)
     ├── pyproject.toml        # Upstream metadata
-    └── requirements.txt      # Upstream dependencies
+    ├── requirements.txt      # Upstream dependencies
+    └── comfy/ldm/lightricks/model.py  # Patched for MagCache compatibility
 ```
 
 ## Why This Design?
@@ -245,6 +314,43 @@ rm -rf .venv
 
 ### Custom node dependency issues
 See [CUSTOM_NODES.md](CUSTOM_NODES.md) for detailed guide on managing custom nodes with ComfyUI-Manager.
+
+### Build decord2 from source on Windows (optional, for video features)
+
+**Prerequisites:**
+- Visual Studio 2017+ (Community edition is free)
+- CMake 3.8+ (`choco install cmake`)
+- FFmpeg (`choco install ffmpeg`)
+- Git (`choco install git`)
+
+**Automated build:**
+```cmd
+scripts\build_decord_windows.bat
+```
+
+This will:
+1. Clone johnnynunez/decord2
+2. Configure CMake for Windows
+3. Open Visual Studio solution
+4. Guide you through manual build steps
+
+**Manual build (alternative):**
+```cmd
+cd temp
+git clone --recursive https://github.com/johnnynunez/decord2
+cd decord2\build
+cmake -DCMAKE_CXX_FLAGS="/DDECORD_EXPORTS" -DCMAKE_CONFIGURATION_TYPES="Release" -G "Visual Studio 15 2017 Win64" ..
+REM Open decord.sln, set Release, build
+cd ..\python
+python setup.py install --user
+```
+
+**Test installation:**
+```cmd
+python -c "from decord import VideoReader; print('✓ decord2 installed!')"
+```
+
+> **Note**: decord2 has no pre-built Windows wheels on PyPI or GitHub. Building from source is the only option for Windows video features in ComfyUI-RMBG SAM3 nodes.
 
 ## Migration Notes
 

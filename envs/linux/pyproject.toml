@@ -34,14 +34,13 @@ dependencies = [
     "spandrel",
     "pydantic~=2.0",
     "pydantic-settings~=2.0",
+
     # Additional custom node dependencies (from wrapper_config.toml)
     "comfyui-manager>=4.0.5",
     "gitpython",
     "pygithub",
     "opencv-python",
-    "opencv-python-headless",
     "onnxruntime",
-    "onnxruntime-gpu",
     "hydra-core",
     "segment-anything",
     "matplotlib",
@@ -68,8 +67,15 @@ dependencies = [
     "ftfy",
     "nvidia-ml-py",
     "imageio-ffmpeg",
-    "sageattention>=1.0.6",
     "ninja",
+    "pywavelets",
+    "sam-2 @ git+https://github.com/facebookresearch/sam2",
+
+    # Platform-specific dependencies (Linux)
+    "onnxruntime-gpu",
+    "decord2>=3.0.0",
+    "soundfile",
+    "sageattention @ git+https://github.com/thu-ml/SageAttention",
 ]
 [project.urls]
 homepage = "https://www.comfy.org/"
@@ -150,10 +156,16 @@ explicit = true
 torch = { index = "pytorch-cu130" }
 torchvision = { index = "pytorch-cu130" }
 torchaudio = { index = "pytorch-cu130" }
-sageattention = { url = "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl" }
 
 [tool.uv]
+# Platform-specific lock for Linux
+# Multi-platform locks have package compatibility issues (onnxruntime, decord2)
+
 # Exclude problematic packages that ComfyUI doesn't actually need
 override-dependencies = [
     # flash-attn is very hard to build and ComfyUI works fine without it
 ]
+
+[tool.uv.extra-build-dependencies]
+# Extra build dependencies for packages that need them at build time
+sageattention = ["torch"]

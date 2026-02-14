@@ -20,11 +20,11 @@ def update_comfy() -> None:
         print(f"Error: ComfyUI directory not found: {comfyui_dir}", file=sys.stderr)
         sys.exit(1)
     
-    print("📦 Backing up environment before update...")
+    print("[*] Backing up environment before update...")
     backup_env()
     
     print()
-    print("🔄 Updating ComfyUI...")
+    print("[*] Updating ComfyUI...")
     
     # Reset and pull ComfyUI
     commands = [
@@ -40,18 +40,18 @@ def update_comfy() -> None:
             sys.exit(1)
     
     print()
-    print("🔄 Syncing wrapper with updated ComfyUI/requirements.txt...")
+    print("[*] Syncing wrapper with updated ComfyUI/requirements.txt...")
     sync_wrapper()
     
     print()
-    print("📥 Syncing workspace environment...")
+    print("[*] Syncing workspace environment...")
     result = subprocess.run(["uv", "sync"], cwd=workspace_dir, check=False)
     if result.returncode != 0:
         print("Error: uv sync failed", file=sys.stderr)
         sys.exit(1)
     
     print()
-    print("✓ Update complete!")
+    print("[OK] Update complete!")
     print()
     
     verify_pytorch()

@@ -6,17 +6,14 @@
 index_name = "pytorch-cu130"
 index_url = "https://download.pytorch.org/whl/cu130"
 
-# Additional custom node dependencies
-# Add or remove packages as needed
+# Additional custom node dependencies (common to all platforms)
 [dependencies]
 custom = [
     "comfyui-manager>=4.0.5",
     "gitpython",
     "pygithub",
     "opencv-python",
-    "opencv-python-headless",
-    "onnxruntime",
-    "onnxruntime-gpu",
+    "onnxruntime",  # CPU version works cross-platform
     "hydra-core",
     "segment-anything",
     "matplotlib",
@@ -40,12 +37,67 @@ custom = [
     "diffusers",
     "torchlanc",
     "py-cpuinfo",
-    # "decord",  # DISABLED: No Python 3.13 wheel available (only up to 3.10)
     "ftfy",
     "nvidia-ml-py",
     "imageio-ffmpeg",
-    "sageattention>=1.0.6",
-    # RadialAttn + WAN Video dependencies
     "ninja",  # Required for compiling custom CUDA kernels
-    "git+https://github.com/facebookresearch/sam2",  # SAM2 for Impact Pack
+    "pywavelets",  # Required for RES4LYF custom node
+    "sam-2 @ git+https://github.com/facebookresearch/sam2",  # SAM2 for Impact Pack
 ]
+
+# Windows-specific dependencies (installed on Windows only)
+[dependencies.windows]
+python = ">=3.11"
+# ONNX GPU runtime for Windows
+onnxruntime-gpu = ""
+# SageAttention 2.2.0.post4 (Windows-optimized stable ABI wheel)
+sageattention = "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl"
+# SpargeAttn (Sparse SageAttention for RadialAttn custom node)
+spas-sage-attn = "https://github.com/woct0rdho/SpargeAttn/releases/download/v0.1.0-windows.post4/spas_sage_attn-0.1.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl"
+# Triton (required by SageAttention on Windows)
+triton-windows = ">=3.6.0"
+# decord2 for video decoding (pre-built Windows wheel with FFmpeg bundled)
+decord2 = "https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/v3.0.0-decord2/decord2-3.0.0%2Bwin.x64.cpu-py3-none-any.whl"
+# soundfile for audio processing (required by cosyvoice3)
+soundfile = ""
+
+# Linux/macOS-specific dependencies (installed on Linux/macOS only)
+[dependencies.linux]
+python = ">=3.11"
+# ONNX GPU runtime for Linux
+onnxruntime-gpu = ""
+# decord2 for video decoding (SAM3 nodes)
+decord2 = ">=3.0.0"
+# soundfile for audio processing (required by cosyvoice3)
+soundfile = ""
+# SageAttention: Build from source with CUDA (or use pre-built wheel from GitHub releases)
+# To build: Run scripts/build_attention_wheels.sh
+# To use release wheel: Update URL below after creating release
+sageattention = "git+https://github.com/thu-ml/SageAttention"
+# SpargeAttn: Sparse SageAttention for RadialAttn
+# Build fails on Linux with glibc 2.42/GCC 15 (header redefinition errors)
+# Use pre-built wheel from GitHub releases or run scripts/build_attention_wheels.sh with patch
+# spas-sage-attn = "git+https://github.com/thu-ml/SpargeAttn"
+# After building wheels, replace above with release URL:
+# spas-sage-attn = "https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/build-wheels-YYYYMMDD/spas_sage_attn-VERSION-cp313-cp313-linux_x86_64.whl"
+
+# Cross-Platform Notes:
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ IMPORTANT: pyproject.toml is auto-generated from this file by sync_wrapper  │
+# │ sync_wrapper.py detects your platform and includes the right dependencies   │
+# │ Do NOT manually edit pyproject.toml - always edit wrapper_config.toml!      │
+# └─────────────────────────────────────────────────────────────────────────────┘
+#
+# When switching platforms:
+#   1. Just run `comfy.bat sync` (Windows) or `./comfy.sh sync` (Linux/macOS)
+#   2. sync_wrapper.py detects platform and generates correct pyproject.toml
+#   3. uv.lock remains cross-platform compatible
+#
+# To build decord2 wheel on Windows:
+#   1. Run: scripts\build_decord_windows.bat
+#   2. Wheel saved to workspace root: decord2-3.0.0-cp313-cp313-win_amd64.whl
+#   3. Update [dependencies.windows] above with your wheel filename
+#   4. Run: comfy.bat sync
+
+# - When switching to Linux, run: uv pip install "decord2>=3.0.0"
+# - Lock file will sync across platforms (platform-specific packages resolved at install time)

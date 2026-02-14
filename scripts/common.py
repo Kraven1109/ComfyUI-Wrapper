@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -43,3 +44,32 @@ def verify_pytorch() -> None:
 def is_windows() -> bool:
     """Check if running on Windows."""
     return sys.platform == "win32" or os.name == "nt"
+
+
+def get_platform_env_dir() -> Path:
+    """Get the platform-specific environment directory (envs/windows or envs/linux)."""
+    system = platform.system()
+    workspace_dir = get_workspace_dir()
+    
+    if system == "Windows":
+        return workspace_dir / "envs" / "windows"
+    else:  # Linux, Darwin (macOS), etc.
+        return workspace_dir / "envs" / "linux"
+
+
+def get_venv_dir() -> Path:
+    """Get the OS-specific virtual environment directory (.venv inside platform dir)."""
+    return get_platform_env_dir() / ".venv"
+
+
+def get_uv_cache_dir() -> Path:
+    """Get the uv cache directory."""
+    # Check if UV_CACHE_DIR environment variable is set
+    if "UV_CACHE_DIR" in os.environ:
+        return Path(os.environ["UV_CACHE_DIR"])
+    
+    # Default locations based on OS
+    if is_windows():
+        return Path("D:\\.cache_uv")
+    else:
+        return Path("/run/media/quangtm/DATA1/.cache_uv")

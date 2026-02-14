@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from common import get_comfyui_dir, get_workspace_dir
+from common import get_comfyui_dir, get_platform_env_dir, get_workspace_dir
 
 
 ATTENTION_MODES = {
@@ -25,6 +25,7 @@ def run_comfy(args: list[str]) -> None:
     """Run ComfyUI with specified arguments."""
     workspace_dir = get_workspace_dir()
     comfyui_dir = get_comfyui_dir()
+    platform_env_dir = get_platform_env_dir()
     
     if not comfyui_dir.exists():
         print(f"Error: ComfyUI directory not found: {comfyui_dir}", file=sys.stderr)
@@ -58,7 +59,7 @@ def run_comfy(args: list[str]) -> None:
         pythonpath = f"{pythonpath}{os.pathsep}{env['PYTHONPATH']}"
     env["PYTHONPATH"] = pythonpath
     
-    print("🚀 Starting ComfyUI...")
+    print("[*] Starting ComfyUI...")
     print(f"   Mode: {attn_mode}")
     if attn_flag:
         print(f"   Flag: {attn_flag}")
@@ -68,21 +69,21 @@ def run_comfy(args: list[str]) -> None:
     result = subprocess.run(cmd, cwd=workspace_dir, env=env)
     
     # After ComfyUI exits, auto-lock the environment to capture any Manager changes
-    print("\n🔒 Auto-locking environment state...")
+    print("\n[*] Auto-locking environment state...")
     try:
         lock_result = subprocess.run(
             ["uv", "lock"],
-            cwd=workspace_dir,
+            cwd=platform_env_dir,  # Run in platform-specific dir
             capture_output=True,
             text=True,
         )
         if lock_result.returncode == 0:
-            print("✓ Environment locked successfully")
-            print("  (All ComfyUI-Manager changes are now captured)")
+            print("[OK] Environment locked successfully")
+            print(f"  (Changes saved to {platform_env_dir.relative_to(workspace_dir)}/uv.lock)")
         else:
-            print(f"⚠ Lock failed: {lock_result.stderr}", file=sys.stderr)
+            print(f"[WARN] Lock failed: {lock_result.stderr}", file=sys.stderr)
     except Exception as e:
-        print(f"⚠ Auto-lock error: {e}", file=sys.stderr)
+        print(f"[WARN] Auto-lock error: {e}", file=sys.stderr)
     
     sys.exit(result.returncode)
 
