@@ -58,7 +58,14 @@ def get_platform_env_dir() -> Path:
 
 
 def get_venv_dir() -> Path:
-    """Get the OS-specific virtual environment directory (.venv inside platform dir)."""
+    """Get the active virtual environment directory.
+    
+    Reads UV_PROJECT_ENVIRONMENT first (set by comfy.sh / comfy.bat), then
+    falls back to the conventional .venv path inside the platform env dir.
+    """
+    uv_project_env = os.environ.get("UV_PROJECT_ENVIRONMENT")
+    if uv_project_env:
+        return Path(uv_project_env)
     return get_platform_env_dir() / ".venv"
 
 
@@ -72,4 +79,4 @@ def get_uv_cache_dir() -> Path:
     if is_windows():
         return Path("D:\\.cache_uv")
     else:
-        return Path("/run/media/quangtm/DATA1/.cache_uv")
+        return Path.home() / ".cache" / "uv"

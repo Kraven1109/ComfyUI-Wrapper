@@ -1,14 +1,14 @@
 [project]
 name = "ComfyUI"
-version = "0.10.0"
+version = "0.18.1"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
     # Core ComfyUI dependencies (auto-synced from ComfyUI/requirements.txt)
-    "comfyui-frontend-package==1.37.11",
-    "comfyui-workflow-templates==0.8.15",
-    "comfyui-embedded-docs==0.4.0",
+    "comfyui-frontend-package==1.42.8",
+    "comfyui-workflow-templates==0.9.39",
+    "comfyui-embedded-docs==0.4.3",
     "torch",
     "torchsde",
     "torchvision",
@@ -28,12 +28,19 @@ dependencies = [
     "psutil",
     "alembic",
     "SQLAlchemy",
+    "filelock",
     "av>=14.2.0",
-    "comfy-kitchen>=0.2.7",
+    "comfy-kitchen>=0.2.8",
+    "comfy-aimdo>=0.2.12",
+    "requests",
+    "simpleeval>=1.0.0",
+    "blake3",
     "kornia>=0.7.1",
     "spandrel",
     "pydantic~=2.0",
     "pydantic-settings~=2.0",
+    "PyOpenGL",
+    "glfw",
 
     # Additional custom node dependencies (from wrapper_config.toml)
     "comfyui-manager>=4.0.5",
@@ -70,15 +77,24 @@ dependencies = [
     "ninja",
     "pywavelets",
     "sam-2 @ git+https://github.com/facebookresearch/sam2",
+    "cache-dit",
+    "onnxruntime-gpu",
+    "soundfile",
+    "numpy>=2.0.0",
+    "rotary-embedding-torch",
+    "edge-tts",
+    "kokoro-onnx",
+    "snac",
+    "librosa>=0.10.2",
+    "moviepy",
 
     # Platform-specific dependencies (Windows)
-    "onnxruntime-gpu",
     "sageattention @ https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl",
     "spas-sage-attn @ https://github.com/woct0rdho/SpargeAttn/releases/download/v0.1.0-windows.post4/spas_sage_attn-0.1.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl",
     "triton-windows>=3.6.0",
     "decord2 @ https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/v3.0.0-decord2/decord2-3.0.0%2Bwin.x64.cpu-py3-none-any.whl",
-    "soundfile",
 ]
+
 [project.urls]
 homepage = "https://www.comfy.org/"
 repository = "https://github.com/comfyanonymous/ComfyUI"
@@ -160,10 +176,14 @@ torchvision = { index = "pytorch-cu130" }
 torchaudio = { index = "pytorch-cu130" }
 
 [tool.uv]
-# Platform-specific lock for Windows
-# Multi-platform locks have package compatibility issues (onnxruntime, decord2)
+# Platform-specific lock for Windows only — prevents cross-platform resolution failures
+environments = ["sys_platform == 'win32'"]
 
 # Exclude problematic packages that ComfyUI doesn't actually need
 override-dependencies = [
     # flash-attn is very hard to build and ComfyUI works fine without it
 ]
+
+[tool.uv.extra-build-dependencies]
+# Extra build dependencies for packages that need them at build time
+groundingdino-py = ["torch"]

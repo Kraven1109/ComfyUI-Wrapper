@@ -42,14 +42,7 @@ def update_comfy() -> None:
     print()
     print("[*] Syncing wrapper with updated ComfyUI/requirements.txt...")
     sync_wrapper()
-    
-    print()
-    print("[*] Syncing workspace environment...")
-    result = subprocess.run(["uv", "sync"], cwd=workspace_dir, check=False)
-    if result.returncode != 0:
-        print("Error: uv sync failed", file=sys.stderr)
-        sys.exit(1)
-    
+
     print()
     print("[OK] Update complete!")
     print()

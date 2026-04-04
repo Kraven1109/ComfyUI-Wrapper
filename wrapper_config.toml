@@ -43,13 +43,29 @@ custom = [
     "ninja",  # Required for compiling custom CUDA kernels
     "pywavelets",  # Required for RES4LYF custom node
     "sam-2 @ git+https://github.com/facebookresearch/sam2",  # SAM2 for Impact Pack
+	# sam3 removed: requires numpy<2 which conflicts with ml_dtypes float4_e2m1fn (insightface/reactor-node)
+	# "sam3 @ git+https://github.com/facebookresearch/sam3",
+	"cache-dit",
+	"onnxruntime-gpu",
+	"soundfile",
+    # numpy 2.x: required for ml_dtypes to register float4_e2m1fn (needed by insightface/reactor-node)
+    "numpy>=2.0.0",
+    # ComfyUI-LLama / seedvr2_videoupscaler deps
+    "rotary-embedding-torch",  # Required by seedvr2_videoupscaler
+    # TTSS (comfyUI-TTSS) TTS engine deps
+    "edge-tts",       # Microsoft Edge TTS (online, 550+ voices)
+    "kokoro-onnx",    # Lightweight neural TTS (ONNX)
+    "snac",           # Required by Orpheus TTS engine
+    # audio-separation-nodes-comfyui deps
+    "librosa>=0.10.2",
+    "moviepy",
+
 ]
 
 # Windows-specific dependencies (installed on Windows only)
 [dependencies.windows]
 python = ">=3.11"
 # ONNX GPU runtime for Windows
-onnxruntime-gpu = ""
 # SageAttention 2.2.0.post4 (Windows-optimized stable ABI wheel)
 sageattention = "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0%2Bcu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl"
 # SpargeAttn (Sparse SageAttention for RadialAttn custom node)
@@ -59,25 +75,21 @@ triton-windows = ">=3.6.0"
 # decord2 for video decoding (pre-built Windows wheel with FFmpeg bundled)
 decord2 = "https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/v3.0.0-decord2/decord2-3.0.0%2Bwin.x64.cpu-py3-none-any.whl"
 # soundfile for audio processing (required by cosyvoice3)
-soundfile = ""
 
 # Linux/macOS-specific dependencies (installed on Linux/macOS only)
 [dependencies.linux]
 python = ">=3.11"
 # ONNX GPU runtime for Linux
-onnxruntime-gpu = ""
 # decord2 for video decoding (SAM3 nodes)
 decord2 = ">=3.0.0"
 # soundfile for audio processing (required by cosyvoice3)
-soundfile = ""
 # SageAttention: Build from source with CUDA (or use pre-built wheel from GitHub releases)
 # To build: Run scripts/build_attention_wheels.sh
 # To use release wheel: Update URL below after creating release
 sageattention = "git+https://github.com/thu-ml/SageAttention"
 # SpargeAttn: Sparse SageAttention for RadialAttn
-# Build fails on Linux with glibc 2.42/GCC 15 (header redefinition errors)
-# Use pre-built wheel from GitHub releases or run scripts/build_attention_wheels.sh with patch
-# spas-sage-attn = "git+https://github.com/thu-ml/SpargeAttn"
+# Use woct0rdho fork - builds successfully on Linux (thu-ml upstream has glibc 2.42/GCC 15 issues)
+spas-sage-attn = "git+https://github.com/woct0rdho/SpargeAttn"
 # After building wheels, replace above with release URL:
 # spas-sage-attn = "https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/build-wheels-YYYYMMDD/spas_sage_attn-VERSION-cp313-cp313-linux_x86_64.whl"
 
@@ -101,3 +113,14 @@ sageattention = "git+https://github.com/thu-ml/SageAttention"
 
 # - When switching to Linux, run: uv pip install "decord2>=3.0.0"
 # - Lock file will sync across platforms (platform-specific packages resolved at install time)
+
+# Extra build dependencies for packages that compile from source and need torch available at build time.
+# sync_wrapper.py reads this and emits [tool.uv.extra-build-dependencies] in the generated pyproject.toml.
+# Keys at the top level apply to ALL platforms; sub-tables [uv.extra_build_deps.linux] / [uv.extra_build_deps.windows]
+# apply only to that platform. Platform-specific entries override common ones for the same package.
+[uv.extra_build_deps.linux]
+sageattention = ["torch"]
+"spas-sage-attn" = ["torch"]
+
+[uv.extra_build_deps.windows]
+groundingdino-py = ["torch"]

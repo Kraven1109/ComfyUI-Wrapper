@@ -135,6 +135,8 @@ def generate_platform_pyproject(
     pytorch_index_name: str = wrapper_config["pytorch"]["index_name"]
     pytorch_index_url: str = wrapper_config["pytorch"]["index_url"]
     
+    platform_sys = "linux" if platform.lower() == "linux" else "win32"
+    
     uv_block = f"""
 [[tool.uv.index]]
 name = "{pytorch_index_name}"
@@ -148,8 +150,8 @@ torchvision = {{ index = "{pytorch_index_name}" }}
 torchaudio = {{ index = "{pytorch_index_name}" }}
 
 [tool.uv]
-# Platform-specific lock for {platform}
-# Multi-platform locks have package compatibility issues (onnxruntime, decord2)
+# Platform-specific lock for {platform} only — prevents cross-platform resolution failures
+environments = ["sys_platform == '{platform_sys}'"]
 
 # Exclude problematic packages that ComfyUI doesn't actually need
 override-dependencies = [
@@ -157,13 +159,21 @@ override-dependencies = [
 ]
 """
     
-    # Add extra-build-dependencies for Linux only (needed for sageattention build from source)
-    if platform.lower() == "linux":
+    # Add extra-build-dependencies from wrapper_config.toml [uv.extra_build_deps]
+    extra_build_cfg = wrapper_config.get("uv", {}).get("extra_build_deps", {})
+    # Top-level list values = common to all platforms; sub-table keys = platform-specific
+    common_build_deps: dict = {k: v for k, v in extra_build_cfg.items() if isinstance(v, list)}
+    platform_build_deps: dict = extra_build_cfg.get(platform.lower(), {})
+    all_build_deps = {**common_build_deps, **platform_build_deps}
+
+    if all_build_deps:
         uv_block += """
 [tool.uv.extra-build-dependencies]
 # Extra build dependencies for packages that need them at build time
-sageattention = ["torch"]
 """
+        for pkg, deps in all_build_deps.items():
+            deps_str = "[" + ", ".join(f'"{d}"' for d in deps) + "]"
+            uv_block += f"{pkg} = {deps_str}\n"
     
     text = text.rstrip() + "\n\n" + uv_block.lstrip()
     
@@ -177,9 +187,9 @@ def sync_platform_env(platform: str, platform_dir: Path) -> None:
     """Sync platform-specific environment (uv lock + sync)."""
     print(f"\n[*] Syncing {platform} environment...")
     
-    # Run uv lock (with preview-features flag for Linux to suppress warning)
+    # Run uv lock (with preview-features flag to suppress warning)
     lock_cmd = ["uv", "lock"]
-    if platform.lower() == "linux":
+    if platform.lower() in ("linux", "windows"):
         lock_cmd.extend(["--preview-features", "extra-build-dependencies"])
     
     result = subprocess.run(
@@ -200,6 +210,8 @@ def sync_platform_env(platform: str, platform_dir: Path) -> None:
     sync_cmd = ["uv", "sync"]
     if platform.lower() == "linux":
         sync_cmd.extend(["--python-platform", "linux", "--preview-features", "extra-build-dependencies"])
+    elif platform.lower() == "windows":
+        sync_cmd.extend(["--preview-features", "extra-build-dependencies"])
     
     result = subprocess.run(
         sync_cmd,
@@ -213,7 +225,9 @@ def sync_platform_env(platform: str, platform_dir: Path) -> None:
         print(result.stderr, file=sys.stderr)
         return
     
-    print(f"   [OK] Environment synced: {platform_dir.relative_to(get_workspace_dir())}/.venv")
+    import os as _os
+    actual_venv = _os.environ.get("UV_PROJECT_ENVIRONMENT") or str(platform_dir / ".venv")
+    print(f"   [OK] Environment synced: {actual_venv}")
 
 
 def sync_wrapper() -> None:
