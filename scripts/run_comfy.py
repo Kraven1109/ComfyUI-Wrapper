@@ -46,30 +46,30 @@ def run_comfy(args: list[str]) -> None:
         print(f"Valid modes: {', '.join(ATTENTION_MODES.keys())}", file=sys.stderr)
         sys.exit(1)
     
-    # Build command — use the venv's Python directly for robustness
-    # (avoids relying on PATH resolution when another venv is active in the shell)
-    uv_project_env = os.environ.get("UV_PROJECT_ENVIRONMENT")
-    if uv_project_env:
-        venv_path = Path(uv_project_env)
-        python_exe = venv_path / "Scripts" / "python.exe" if sys.platform == "win32" else venv_path / "bin" / "python"
-        if not python_exe.exists():
-            python_exe = Path(sys.executable)  # fallback
-    else:
-        python_exe = Path(sys.executable)
+    # Derive the venv from the active Python executable — always correct regardless of env var
+    # state. `uv run` can unset UV_PROJECT_ENVIRONMENT before spawning Python, and a prior
+    # shell session (e.g. running llm-serve first) may leave a stale value in the environment.
+    # sys.executable = /path/.venv/bin/python  →  venv_path = /path/.venv
+    venv_path = Path(sys.executable).parent.parent
+    python_exe = Path(sys.executable)
 
     cmd = [str(python_exe), str(main_py)]
     if attn_flag:
         cmd.append(attn_flag)
     cmd.extend(extra_args)
-    
+
     # Set PYTHONPATH
     env = os.environ.copy()
-    
-    # Ensure correct venv is used by all subprocesses (e.g. ComfyUI-Manager's `uv pip install`).
-    # VIRTUAL_ENV takes priority over the Python executable path in uv, so we must override it
-    # explicitly — guards against the user having another venv activated in their shell.
-    if uv_project_env:
-        env["VIRTUAL_ENV"] = uv_project_env
+
+    # Propagate the correct venv to all child processes so tools like
+    # ComfyUI-Manager's `uv pip install` always target the right environment,
+    # overriding any stale values inherited from the outer shell (e.g. after
+    # running llm-serve which sets UV_PYTHON and UV_PROJECT_ENVIRONMENT).
+    env["VIRTUAL_ENV"] = str(venv_path)
+    env["UV_PROJECT_ENVIRONMENT"] = str(venv_path)
+    # UV_PYTHON takes precedence over VIRTUAL_ENV/UV_PROJECT_ENVIRONMENT in uv;
+    # remove it so child uv commands use the environment we explicitly set above.
+    env.pop("UV_PYTHON", None)
 
     pythonpath = str(comfyui_dir)
     if "PYTHONPATH" in env:
@@ -80,6 +80,7 @@ def run_comfy(args: list[str]) -> None:
     print(f"   Mode: {attn_mode}")
     if attn_flag:
         print(f"   Flag: {attn_flag}")
+    print(f"   Venv: {venv_path}")
     print()
     
     # Run ComfyUI

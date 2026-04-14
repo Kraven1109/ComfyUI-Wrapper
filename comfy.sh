@@ -7,6 +7,8 @@ WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 export UV_PROJECT_ENVIRONMENT="${HOME}/envs_AIO/comfyUI_DATA1/.venv"
 export VIRTUAL_ENV="${HOME}/envs_AIO/comfyUI_DATA1/.venv"
+# UV_PYTHON overrides UV_PROJECT_ENVIRONMENT — unset it so uv uses the correct project env
+unset UV_PYTHON
 
 echo "Using environment: $ENV_DIR"
 

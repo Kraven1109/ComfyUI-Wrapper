@@ -4,6 +4,8 @@ REM Windows uses envs/windows/.venv
 set ENV_DIR=envs\windows
 set UV_PROJECT_ENVIRONMENT=%~dp0%ENV_DIR%\.venv
 set VIRTUAL_ENV=%~dp0%ENV_DIR%\.venv
+REM UV_PYTHON overrides UV_PROJECT_ENVIRONMENT — unset it so uv uses the correct project env
+set UV_PYTHON=
 set UV_CACHE_DIR=D:\.cache_uv
 echo Using environment: %ENV_DIR%
 echo Cache dir: %UV_CACHE_DIR%
