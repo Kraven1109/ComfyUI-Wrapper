@@ -6,6 +6,7 @@ from __future__ import annotations
 import sys
 
 from backup_env import backup_env
+from patch_manager import patch_status_summary, revert_all_git_patches, sync_dynamic_patches
 from restore_env import restore_env
 from run_comfy import run_comfy
 from sync_wrapper import sync_wrapper
@@ -32,7 +33,10 @@ Commands:
                            backup: Optional backup file (e.g., uv.lock.backup_*)
   
   sync                     Sync wrapper from config + upstream
-                           (automatically runs uv lock && uv sync)
+                           (automatically runs uv lock, uv sync, and syncs patches)
+  
+  patch [action]           Manage dynamic patches from patches/
+                           Actions: sync (default), revert, status
   
   help                     Show this help message
 
@@ -43,6 +47,9 @@ Examples:
   comfy backup                      # Create backup
   comfy restore                     # Restore from latest
   comfy sync                        # Regenerate wrapper and sync
+  comfy patch status                # Check patch statuses
+  comfy patch sync                  # Sync / re-apply all patches
+  comfy patch revert                # Revert all applied Category B patches
 
 Configuration:
   Edit wrapper_config.toml to customize PyTorch version and dependencies
@@ -72,6 +79,14 @@ def main() -> None:
             restore_env(restore_arg)
         elif command in ("sync", "s"):
             sync_wrapper()
+        elif command in ("patch", "p"):
+            subaction = args[0].lower() if args else "sync"
+            if subaction == "status":
+                patch_status_summary()
+            elif subaction == "revert":
+                revert_all_git_patches()
+            else:
+                sync_dynamic_patches()
         elif command in ("help", "h", "-h", "--help"):
             show_help()
         else:

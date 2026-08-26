@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from common import get_comfyui_dir, get_logs_dir, get_platform_env_dir, get_workspace_dir, rotate_logs
+from patch_manager import sync_dynamic_patches
 
 
 ATTENTION_MODES = {
@@ -32,7 +33,9 @@ def run_comfy(args: list[str]) -> None:
     if rotated > 0:
         print(f"[*] Cleaned {rotated} expired log file(s) (>30 days)")
 
-    
+    # Sync dynamic patches from patches/ to ComfyUI/custom_nodes/
+    sync_dynamic_patches()
+
     if not comfyui_dir.exists():
         print(f"Error: ComfyUI directory not found: {comfyui_dir}", file=sys.stderr)
         sys.exit(1)

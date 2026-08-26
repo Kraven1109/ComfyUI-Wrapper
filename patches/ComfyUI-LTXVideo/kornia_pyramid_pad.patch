@@ -1,0 +1,15 @@
+diff --git a/pyramid_blending.py b/pyramid_blending.py
+index afc4bac..00974f7 100644
+--- a/pyramid_blending.py
++++ b/pyramid_blending.py
+@@ -10,9 +10,9 @@ from kornia.geometry.transform.pyramid import (
+     build_pyramid,
+     find_next_powerof_two,
+     is_powerof_two,
+-    pad,
+ )
+ from torch import Tensor
++from torch.nn.functional import pad
+ 
+ from .nodes_registry import comfy_node
+ 

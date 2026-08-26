@@ -8,6 +8,7 @@ import sys
 
 from backup_env import backup_env
 from common import get_comfyui_dir, get_workspace_dir, verify_pytorch
+from patch_manager import sync_dynamic_patches
 from sync_wrapper import sync_wrapper
 
 
@@ -60,6 +61,16 @@ def update_comfy() -> None:
     print()
     print("[*] Syncing wrapper with updated ComfyUI/requirements.txt...")
     sync_wrapper()
+
+    print()
+    print("[*] Re-applying dynamic patches after upstream reset...")
+    _, conflicts = sync_dynamic_patches(report_conflicts=True)
+    if conflicts:
+        print(
+            f"[WARN] {len(conflicts)} patch(es) entered CONFLICT state after update.",
+            file=sys.stderr,
+        )
+        print("       Run: comfy patch status", file=sys.stderr)
 
     print()
     print("[OK] Update complete!")

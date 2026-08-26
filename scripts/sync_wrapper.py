@@ -13,6 +13,7 @@ import tomllib
 from pathlib import Path
 
 from common import get_comfyui_dir, get_workspace_dir
+from patch_manager import sync_dynamic_patches
 
 
 def read_requirements(path: Path) -> list[str]:
@@ -309,6 +310,9 @@ def sync_wrapper() -> None:
         sync_platform_env("Linux", linux_dir)
         print("\n[NOTE] Windows environment files generated but NOT synced (run on Windows to sync)")
     
+    # Dynamically sync patch links from patches/ (if any exist)
+    sync_dynamic_patches()
+
     print("\n[OK] Sync complete!")
     print("\nStructure:")
     print(f"   envs/windows/  -> Windows-specific venv + pyproject.toml + uv.lock")
