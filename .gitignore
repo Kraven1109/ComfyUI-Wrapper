@@ -1,0 +1,30 @@
+# Bytecode & Caches
+__pycache__/
+*.py[cod]
+.cache/
+.uv/
+
+# Virtual Environments
+envs/*/.venv/
+.venv/
+
+# Local Dev, Secrets & IDE
+.env
+*.code-workspace
+.vscode/
+.idea/
+AGENTS.md
+.agents/
+
+# Logs, Backups & Scratch
+logs/
+backups/
+_scratch/
+*.bak
+
+# ComfyUI Submodule
+ComfyUI/
+
+# OS Metadata
+.DS_Store
+Thumbs.db
