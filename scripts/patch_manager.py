@@ -44,6 +44,32 @@ def get_patches_dir() -> Path:
     return get_workspace_dir() / "patches"
 
 
+def get_manifest_path() -> Path:
+    """Return path to master patch manifest file (patches.txt)."""
+    return get_patches_dir() / "patches.txt"
+
+
+def load_patch_manifest() -> list[str] | None:
+    """Load list of enabled relative patch paths from patches/patches.txt.
+
+    Returns None if manifest does not exist (falls back to auto-discovery).
+    Lines starting with '#' or empty lines are ignored.
+    All entries are normalized with forward slashes.
+    """
+    manifest_file = get_manifest_path()
+    if not manifest_file.exists() or not manifest_file.is_file():
+        return None
+
+    entries: list[str] = []
+    for line in manifest_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        normalized = line.replace("\\", "/").rstrip("/")
+        entries.append(normalized)
+    return entries
+
+
 def _has_git() -> bool:
     """Return True if git is available on PATH."""
     return shutil.which("git") is not None
@@ -88,7 +114,7 @@ def _norm(path: Path) -> str:
 def _create_directory_link(source_dir: Path, target_link: Path) -> bool:
     """Create a directory symlink or NTFS junction without requiring admin rights."""
     source_str = str(source_dir.resolve())
-    target_str = str(target_link.resolve())
+    target_str = str(target_link)
 
     # If target already exists, verify it points to the correct source
     if target_link.exists() or target_link.is_symlink():
@@ -161,11 +187,15 @@ def sync_dynamic_links() -> int:
     if not custom_nodes_dir.exists():
         return 0
 
+    manifest = load_patch_manifest()
     active_patch_names: set[str] = set()
 
     if patches_dir.exists():
         for item in patches_dir.iterdir():
             if _is_category_a_dir(item):
+                # If manifest is present, item must be explicitly listed
+                if manifest is not None and item.name not in manifest:
+                    continue
                 active_patch_names.add(item.name)
                 target_link = custom_nodes_dir / item.name
                 if _create_directory_link(item, target_link):
@@ -213,12 +243,29 @@ def _protect_link_from_git(link_path: Path) -> None:
 # ============================================================================
 
 def find_patch_files() -> list[Path]:
-    """Find all *.patch / *.diff files in patches/ directories that are NOT Category A."""
+    """Find all *.patch / *.diff files in patches/ directories that are NOT Category A.
+
+    If patches/patches.txt exists, returns only the listed files that end in .patch or .diff.
+    Otherwise, discovers all *.patch and *.diff files recursively.
+    """
     patches_dir = get_patches_dir()
     if not patches_dir.exists() or not patches_dir.is_dir():
         return []
 
-    patch_files: list[Path] = []
+    manifest = load_patch_manifest()
+    if manifest is not None:
+        patch_files: list[Path] = []
+        for entry in manifest:
+            if not (entry.endswith(".patch") or entry.endswith(".diff")):
+                continue  # Category A directory entry
+            patch_path = patches_dir / Path(entry)
+            if patch_path.exists() and patch_path.is_file():
+                patch_files.append(patch_path)
+            else:
+                print(f"   [WARN] Manifest patch not found: patches/{entry}", file=sys.stderr)
+        return patch_files
+
+    patch_files = []
     for ext in ("*.patch", "*.diff"):
         for p in patches_dir.rglob(ext):
             # Skip any file inside a Category A directory

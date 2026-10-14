@@ -1,0 +1,19 @@
+# ============================================================================
+# ComfyUI Master Patch Manifest
+# Only patches and extensions listed in this file will be active.
+# To disable a patch or extension, comment it out with '#'
+#
+# Use relative paths with forward slashes (e.g., path/to/file.patch)
+# for 100% cross-platform compatibility (Windows & Linux).
+# ============================================================================
+
+# --- Category A: Dynamic Runtime Extension Nodes ---
+# (Directories with __init__.py symlinked into ComfyUI/custom_nodes/)
+comfyui-fix-image-rotation
+comfyui-cross-platform-paths
+comfyui-gguf-arch-support
+# comfyui-ui-enhancer
+
+# --- Category B: Unified Git Diff Patches ---
+# (Applied via git apply to target custom nodes or ComfyUI core)
+ComfyUI-LTXVideo/kornia_pyramid_pad.patch
