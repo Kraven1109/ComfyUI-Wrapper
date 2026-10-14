@@ -60,7 +60,8 @@ ComfyUI_portable/
   - triton-windows for JIT compilation
   - insightface Python 3.13 pre-built wheel
 - **Linux/macOS (`envs/linux/`)**:
-  - SageAttention >=2.2.0 (source build or manylinux wheel with CUDA support)
+  - SageAttention >=2.2.0 (pre-built Linux wheel in `wheels/` with CUDA 13.x & Blackwell/Ada/Hopper support)
+  - SpargeAttn >=0.1.0 for RadialAttn (pre-built Linux wheel in `wheels/`)
   - decord2 >=3.0.0 from PyPI
   - soundfile from PyPI
 

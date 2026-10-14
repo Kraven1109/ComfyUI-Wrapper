@@ -93,21 +93,16 @@ decord2 = "https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/v3.0.
 
 # Linux/macOS-specific dependencies (installed on Linux/macOS only)
 [dependencies.linux]
-python = ">=3.11"
+python = "==3.13.*"
 insightface = ">=0.7.3"
 # ONNX GPU runtime for Linux
 # decord2 for video decoding (SAM3 nodes)
 decord2 = ">=3.0.0"
 # soundfile for audio processing (required by cosyvoice3)
-# SageAttention: Build from source with CUDA (or use pre-built wheel from GitHub releases)
-# To build: Run scripts/build_attention_wheels.sh
-# To use release wheel: Update URL below after creating release
-sageattention = "git+https://github.com/thu-ml/SageAttention"
-# SpargeAttn: Sparse SageAttention for RadialAttn
-# Use woct0rdho fork - builds successfully on Linux (thu-ml upstream has glibc 2.42/GCC 15 issues)
-spas-sage-attn = "git+https://github.com/woct0rdho/SpargeAttn"
-# After building wheels, replace above with release URL:
-# spas-sage-attn = "https://github.com/Kraven1109/ComfyUI-Wrapper/releases/download/build-wheels-YYYYMMDD/spas_sage_attn-VERSION-cp313-cp313-linux_x86_64.whl"
+# SageAttention & SpargeAttn: Pre-built wheels located in wheels/ directory
+# (To rebuild for new Python/CUDA: run scripts/build_attention_wheels.sh)
+sageattention = ">=2.2.0"
+spas-sage-attn = ">=0.1.0"
 
 # Cross-Platform Notes:
 # ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -135,8 +130,7 @@ spas-sage-attn = "git+https://github.com/woct0rdho/SpargeAttn"
 # Keys at the top level apply to ALL platforms; sub-tables [uv.extra_build_deps.linux] / [uv.extra_build_deps.windows]
 # apply only to that platform. Platform-specific entries override common ones for the same package.
 [uv.extra_build_deps.linux]
-sageattention = ["torch"]
-"spas-sage-attn" = ["torch"]
+# sageattention and spas-sage-attn are pre-built binary wheels in wheels/ directory
 
 [uv.extra_build_deps.windows]
 groundingdino-py = ["torch"]

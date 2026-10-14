@@ -166,6 +166,7 @@ torchvision = {{ index = "{pytorch_index_name}" }}
 torchaudio = {{ index = "{torchaudio_index_name}" }}
 
 [tool.uv]
+find-links = ["../../wheels"]
 # Platform-specific lock for {platform} only — prevents cross-platform resolution failures
 environments = ["sys_platform == '{platform_sys}'"]
 
@@ -223,7 +224,7 @@ def sync_platform_env(platform: str, platform_dir: Path) -> None:
     print(f"   [OK] Lock file updated: {platform_dir.relative_to(get_workspace_dir())}/uv.lock")
     
     # Run uv sync
-    sync_cmd = ["uv", "sync"]
+    sync_cmd = ["uv", "sync", "--all-extras"]
     if platform.lower() == "linux":
         sync_cmd.extend(["--python-platform", "linux", "--preview-features", "extra-build-dependencies"])
     elif platform.lower() == "windows":

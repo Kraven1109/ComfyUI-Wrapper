@@ -1,101 +1,84 @@
 #!/bin/bash
 # Build SageAttention and SpargeAttn wheels for Linux
-# This script builds both attention libraries with CUDA support
-
+# Builds both attention libraries with CUDA support and sm_120a / Ada / Hopper architecture
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$WORKSPACE_DIR/build_wheels"
-OUTPUT_DIR="$WORKSPACE_DIR/wheels_output"
+WHEELS_DIR="$WORKSPACE_DIR/wheels"
 
 echo "🔧 Building Attention Wheels for Linux"
 echo "======================================="
 
-# Create build directories
 mkdir -p "$BUILD_DIR"
-mkdir -p "$OUTPUT_DIR"
+mkdir -p "$WHEELS_DIR"
 
 # Check for CUDA
 if ! command -v nvcc &> /dev/null; then
-    echo "❌ Error: nvcc not found. CUDA toolkit must be installed."
-    echo "   Set CUDA_HOME or add CUDA to PATH"
-    exit 1
+    if [ -x "/opt/cuda/bin/nvcc" ]; then
+        export PATH="/opt/cuda/bin:$PATH"
+    else
+        echo "❌ Error: nvcc not found. CUDA toolkit must be installed."
+        exit 1
+    fi
 fi
 
+export CUDA_HOME="${CUDA_HOME:-/opt/cuda}"
 CUDA_VERSION=$(nvcc --version | grep "release" | sed -n 's/.*release \([0-9.]*\).*/\1/p')
-echo "✓ Found CUDA: $CUDA_VERSION"
+echo "✓ Found CUDA: $CUDA_VERSION (CUDA_HOME=$CUDA_HOME)"
 
-# Set CUDA_HOME if not set
-if [ -z "$CUDA_HOME" ]; then
-    export CUDA_HOME=/opt/cuda
-    echo "  Using CUDA_HOME=$CUDA_HOME"
+# Detect Python (prefer active venv or COMFY_VENV)
+if [ -n "$COMFY_VENV" ] && [ -x "$COMFY_VENV/bin/python" ]; then
+    PYTHON="$COMFY_VENV/bin/python"
+elif [ -x "$WORKSPACE_DIR/.venv/bin/python" ]; then
+    PYTHON="$WORKSPACE_DIR/.venv/bin/python"
+elif [ -n "$VIRTUAL_ENV" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
+    PYTHON="$VIRTUAL_ENV/bin/python"
+else
+    PYTHON="$(command -v python3 || command -v python)"
 fi
 
-# Detect Python version
-PYTHON_VERSION=$(python --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)
-echo "✓ Found Python: $PYTHON_VERSION"
+echo "✓ Using Python: $($PYTHON --version) ($PYTHON)"
 
-# Install build dependencies
-echo ""
-echo "📦 Installing build dependencies..."
-pip install --upgrade pip wheel setuptools auditwheel patchelf
-pip install torch --index-url https://download.pytorch.org/whl/cu130
+# Ensure build requirements in python
+$PYTHON -c "import torch; print(f'✓ PyTorch: {torch.__version__} (CUDA available: {torch.cuda.is_available()})')" || {
+    echo "❌ Error: PyTorch is required in the build environment."
+    exit 1
+}
 
-# Build SageAttention
+# 1. Build SageAttention
 echo ""
 echo "🔨 Building SageAttention..."
 cd "$BUILD_DIR"
-if [ -d "SageAttention" ]; then
-    rm -rf SageAttention
-fi
+rm -rf SageAttention
 git clone --depth=1 https://github.com/thu-ml/SageAttention
 cd SageAttention
-python setup.py bdist_wheel --verbose
-mkdir -p "$OUTPUT_DIR/sageattention"
-cp dist/*.whl "$OUTPUT_DIR/sageattention/"
-echo "✓ SageAttention wheel created: $OUTPUT_DIR/sageattention/"
 
-# Build SpargeAttn  
+# Patch setup.py for C++20 (mandatory for PyTorch 2.14+)
+sed -i 's/-std=c++17/-std=c++20/g' setup.py
+
+$PYTHON setup.py bdist_wheel
+cp dist/*.whl "$WHEELS_DIR/"
+echo "✓ SageAttention wheel saved to: $WHEELS_DIR/"
+
+# 2. Build SpargeAttn
 echo ""
 echo "🔨 Building SpargeAttn..."
 cd "$BUILD_DIR"
-if [ -d "SpargeAttn" ]; then
-    rm -rf SpargeAttn
-fi
-git clone --depth=1 https://github.com/thu-ml/SpargeAttn
+rm -rf SpargeAttn
+# Use woct0rdho fork - includes sm_120a / Blackwell support and modern glibc compatibility
+git clone --depth=1 https://github.com/woct0rdho/SpargeAttn
 cd SpargeAttn
 
-# Workaround for GCC 15/glibc 2.42 header redefinition issue
-# Remove the problematic -Xcompiler -include,cassert flag
-if grep -q "\-Xcompiler \-include,cassert" setup.py; then
-    echo "  Patching setup.py for GCC 15 compatibility..."
-    sed -i 's/-Xcompiler -include,cassert//' setup.py
-fi
+# Patch setup.py for C++20 (mandatory for PyTorch 2.14+)
+sed -i 's/-std=c++17/-std=c++20/g' setup.py
 
-python setup.py bdist_wheel --verbose
-mkdir -p "$OUTPUT_DIR/spas_sage_attn"
-cp dist/*.whl "$OUTPUT_DIR/spas_sage_attn/"
-echo "✓ SpargeAttn wheel created: $OUTPUT_DIR/spas_sage_attn/"
+$PYTHON setup.py bdist_wheel
+cp dist/*.whl "$WHEELS_DIR/"
+echo "✓ SpargeAttn wheel saved to: $WHEELS_DIR/"
 
-# Summary
 echo ""
 echo "=========================================="
-echo "✅ Build complete!"
-echo ""
-echo "Wheels saved to: $OUTPUT_DIR"
-echo ""
-echo "SageAttention:"
-ls -lh "$OUTPUT_DIR/sageattention/"*.whl
-echo ""
-echo "SpargeAttn:"
-ls -lh "$OUTPUT_DIR/spas_sage_attn/"*.whl
-echo ""
-echo "To install locally:"
-echo "  pip install $OUTPUT_DIR/sageattention/*.whl"
-echo "  pip install $OUTPUT_DIR/spas_sage_attn/*.whl"
-echo ""
-echo "To create a GitHub release:"
-echo "  1. Create a new tag: git tag build-wheels-$(date +%Y%m%d)"
-echo "  2. Push tag: git push origin build-wheels-$(date +%Y%m%d)"
-echo "  3. Or manually upload wheels to GitHub Releases"
+echo "✅ Build complete! Wheels available at:"
+ls -lh "$WHEELS_DIR/"*.whl
