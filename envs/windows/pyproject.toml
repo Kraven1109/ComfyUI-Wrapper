@@ -45,6 +45,8 @@ dependencies = [
     "comfyui-manager",
     "gitpython",
     "pygithub",
+    "matrix-nio",
+    "nh3>=0.3.7",
     "accelerate",
     "diffusers",
     "peft",

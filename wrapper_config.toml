@@ -17,6 +17,8 @@ custom = [
     "comfyui-manager",
     "gitpython",
     "pygithub",
+    "matrix-nio",              # Required by ComfyUI-Manager (prevents runtime pip install)
+    "nh3>=0.3.7",              # Required by ComfyUI-Manager prestartup_script
     "accelerate",
     "diffusers",
     "peft",
