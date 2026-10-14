@@ -12,8 +12,8 @@
 comfyui-fix-image-rotation
 comfyui-cross-platform-paths
 comfyui-gguf-arch-support
-# comfyui-ui-enhancer
+comfyui-ui-enhancer
 
 # --- Category B: Unified Git Diff Patches ---
 # (Applied via git apply to target custom nodes or ComfyUI core)
-ComfyUI-LTXVideo/kornia_pyramid_pad.patch
+# ComfyUI-LTXVideo/kornia_pyramid_pad.patch  # Fixed natively upstream in ComfyUI-LTXVideo

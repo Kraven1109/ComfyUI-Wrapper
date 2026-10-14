@@ -1,18 +1,17 @@
 [project]
 name = "ComfyUI"
-version = "0.35.0"
+version = "0.40.0"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = "==3.13.*"
 dependencies = [
     # Core ComfyUI dependencies (auto-synced from ComfyUI/requirements.txt)
-    "comfyui-frontend-package==1.52.7",
-    "comfyui-workflow-templates==0.11.59",
-    "comfyui-embedded-docs==0.5.11",
+    "comfyui-frontend-package==1.55.17",
+    "comfyui-workflow-templates==0.11.82",
+    "comfyui-embedded-docs==0.5.14",
     "torch",
     "torchsde",
     "torchvision",
-    "torchaudio",
     "numpy>=1.25.0",
     "einops",
     "transformers>=4.50.3",
@@ -30,8 +29,8 @@ dependencies = [
     "SQLAlchemy>=2.0.0",
     "filelock",
     "av>=17.0.0",
-    "comfy-kitchen==0.2.33",
-    "comfy-aimdo==0.5.3",
+    "comfy-kitchen==0.2.37",
+    "comfy-aimdo==0.5.6",
     "requests",
     "simpleeval>=1.0.0",
     "blake3",
@@ -43,6 +42,8 @@ dependencies = [
     "comfy-angle",
 
     # Additional custom node dependencies (from wrapper_config.toml)
+    "torchaudio",
+    "colour-science>=0.4.4",
     "comfyui-manager",
     "gitpython",
     "pygithub",
@@ -185,21 +186,14 @@ url = "https://download.pytorch.org/whl/test/cu132"
 explicit = true
 
 [tool.uv.sources]
-# Override PyTorch index (from wrapper_config.toml)
 torch = { index = "pytorch-cu132" }
 torchvision = { index = "pytorch-cu132" }
 torchaudio = { index = "pytorch-test-cu132" }
 
 [tool.uv]
 find-links = ["../../wheels"]
-# Platform-specific lock for Windows only — prevents cross-platform resolution failures
 environments = ["sys_platform == 'win32'"]
-
-# Exclude problematic packages that ComfyUI doesn't actually need
-override-dependencies = [
-    # flash-attn is very hard to build and ComfyUI works fine without it
-]
+override-dependencies = []
 
 [tool.uv.extra-build-dependencies]
-# Extra build dependencies for packages that need them at build time
 groundingdino-py = ["torch"]

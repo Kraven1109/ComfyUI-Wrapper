@@ -10,6 +10,8 @@ torchaudio_index_url = "https://download.pytorch.org/whl/test/cu132"
 # Additional custom node dependencies (common to all platforms)
 [dependencies]
 custom = [
+    "torchaudio",     # Restored for custom nodes (WanVideoWrapper, MelBandRoFormer, CosyVoice3) & Manager check
+    "colour-science>=0.4.4",  # Required by ComfyUI-LTXVideo HDR color primaries
     "comfyui-manager",
     "gitpython",
     "pygithub",

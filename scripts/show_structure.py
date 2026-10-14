@@ -1,118 +1,70 @@
-"""
-ComfyUI Workspace Architecture Visualization
+#!/usr/bin/env python3
+"""ComfyUI Workspace Architecture Visualization."""
 
-Run: python scripts/show_structure.py
-"""
-
-from pathlib import Path
+from __future__ import annotations
 
 
-def show_structure():
-    """Display workspace structure with annotations."""
-    
-    structure = """
-╔═══════════════════════════════════════════════════════════════════════
-║  ComfyUI Portable Workspace - Unified CLI
-╚═══════════════════════════════════════════════════════════════════════
+def show_structure() -> None:
+    """Display workspace structure with up-to-date annotations."""
+    structure = """\
+╔═══════════════════════════════════════════════════════════════════════╗
+║  ComfyUI Portable Workspace - SoTA Unified Architecture               ║
+╚═══════════════════════════════════════════════════════════════════════╝
 
 📁 ComfyUI_portable/
 │
-├─ 🎯 UNIFIED CLI (Use these!)
-│  ├─ comfy.sh                      Linux/Mac: ./comfy.sh <command>
-│  └─ comfy.bat                     Windows:   comfy.bat <command>
+├─ 🎯 UNIFIED CLI ENTRYPOINTS
+│  ├─ comfy.sh                      Linux/macOS: ./comfy.sh <command>
+│  └─ comfy.bat                     Windows:     comfy.bat <command>
 │
 │     Commands:
-│       comfy run [mode] [args]    - Launch ComfyUI
-│       comfy update               - Update everything
-│       comfy backup               - Create backup
-│       comfy restore [backup]     - Restore environment
-│       comfy sync                 - Regenerate + lock + sync (automated!)
-│       comfy help                 - Show help
+│       comfy run, r [mode] [args]  Launch ComfyUI (default: sage)
+│       comfy update, u             Backup + revert patches + git pull + sync
+│       comfy sync, s               Generate pyproject.toml + uv lock & sync + patches
+│       comfy patch, p [action]     Manage patches (sync | status | revert)
+│       comfy backup, b             Snapshot platform uv.lock & frozen package list
+│       comfy restore, res [file]   Rollback environment to latest/target backup
+│       comfy doctor, d             Verify PyTorch, CUDA, VRAM & GPU architectures
+│       comfy structure, st         Show workspace architecture diagram
+│       comfy help, h               Show command reference
 │
-├─ 📝 wrapper_config.toml         ← EDIT THIS for customizations
-│  ├─ [pytorch]                     (CUDA version, index URL)
-│  └─ [dependencies]                (custom packages)
+├─ 📝 wrapper_config.toml           ← SINGLE SOURCE OF CONFIGURATION
+│  ├─ [pytorch]                     (CUDA index URLs & wheel sources)
+│  ├─ [dependencies]                (custom, windows, and linux packages)
+│  └─ [uv.extra_build_deps]         (build-time dependencies for source wheels)
 │
-├─ 📄 pyproject.toml              ← AUTO-GENERATED (don't edit)
-├─ 🔒 uv.lock                     ← Locked dependencies
-├─ 📦 .venv/                      ← Virtual environment (git-safe)
+├─ 🌍 envs/                         ← ISOLATED PLATFORM ENVIRONMENTS
+│  ├─ windows/                      (pyproject.toml, uv.lock, .venv/)
+│  └─ linux/                        (pyproject.toml, uv.lock, .venv/)
 │
-├─ 🐍 scripts/                    ← ALL LOGIC HERE (cross-platform)
-│  ├─ cli.py                        (unified CLI dispatcher)
-│  ├─ common.py                     (shared utilities, path helpers)
-│  ├─ run_comfy.py                  (launch ComfyUI with attention modes)
-│  ├─ update_comfy.py               (git pull + sync workflow)
-│  ├─ backup_env.py                 (snapshot environment)
-│  ├─ restore_env.py                (restore from backup)
-│  ├─ sync_wrapper.py               (generate + lock + sync - automated!)
-│  └─ show_structure.py             (this file)
+├─ 🩹 patches/                      ← NON-INTRUSIVE PATCH SYSTEM
+│  ├─ patches.txt                   (optional manifest controlling active patches)
+│  ├─ <ext_name>/__init__.py        (Category A: Auto-linked to custom_nodes/)
+│  └─ <target>/*.patch              (Category B: Idempotent git apply diffs)
 │
-├─ 🪟 sync_windows.bat            ← Windows initial setup only
+├─ 🐍 scripts/                      ← CONSOLIDATED CORE ENGINE
+│  ├─ common.py                     (Log, paths, git/uv runners, pruner, TTY prompt)
+│  ├─ cli.py                        (unified command dispatcher)
+│  ├─ run_comfy.py                  (smart port/VRAM manager + ECMA-48 tee logger)
+│  ├─ sync_wrapper.py               (idempotent TOML generator + env sync)
+│  ├─ update_comfy.py               (safe upstream git updater + changelog)
+│  ├─ patch_manager.py              (Category A links + Category B git patches)
+│  ├─ backup_env.py                 (platform-scoped lock & freeze snapshot)
+│  ├─ restore_env.py                (platform-aware rollback from backups/)
+│  └─ show_structure.py             (architecture overview)
 │
-├─ 💾 Backups
-│  ├─ uv.lock.backup_YYYYMMDD_*     (lock snapshots)
-│  └─ env_backup_YYYYMMDD_*.txt     (package lists)
+├─ 💾 backups/                      ← PLATFORM-ISOLATED SNAPSHOTS (KEEP LAST 20)
+│  ├─ uv.lock.<plat>.backup_*       (exact per-OS lockfile states)
+│  └─ env_backup.<plat>_*.txt       (frozen per-OS package inventories)
 │
-├─ 📚 Documentation
-│  ├─ README.md                     (main docs)
-│  ├─ README_WORKSPACE.md           (legacy notes)
-│  └─ REFACTORING.md                (change summary)
+├─ 📜 logs/                         ← SESSION LOGS (30-DAY AUTO-ROTATION)
+│  └─ comfyui_YYYYMMDD_HHMMSS.log   (clean ANSI-stripped console output)
 │
-└─ 📂 ComfyUI/                    ← Git repo (clean, auto-updated)
-   ├─ pyproject.toml                (upstream metadata - SOURCE)
-   ├─ requirements.txt              (upstream deps - SOURCE)
-   └─ main.py                       (entry point)
-
-═══════════════════════════════════════════════════════════════════════
-WORKFLOW: How Updates Work (Fully Automated!)
-═══════════════════════════════════════════════════════════════════════
-
-1. Edit wrapper_config.toml
-2. Run: ./comfy.sh sync
-   ├─ sync_wrapper.py        (read config + upstream, generate pyproject.toml)
-   ├─ uv lock                (update lock with new deps)
-   └─ uv sync                (install to .venv)
-   
-   All automatic - no manual chaining!
-
-═══════════════════════════════════════════════════════════════════════
-KEY FEATURES
-═══════════════════════════════════════════════════════════════════════
-
-✅ Unified CLI              comfy.sh / comfy.bat (one command for all)
-✅ Automated workflows       comfy sync does regenerate + lock + sync
-✅ Single config file        wrapper_config.toml (not 3+ files)
-✅ Cross-platform            Python scripts (not bash + batch)
-✅ No duplication            350 lines (not 1000)
-✅ Git-safe                  .venv at parent (not in ComfyUI/)
-✅ Reproducible              uv.lock with hashes
-✅ Auto-sync                 From upstream requirements.txt
-
-═══════════════════════════════════════════════════════════════════════
-QUICK COMMANDS (The Smart Way!)
-═══════════════════════════════════════════════════════════════════════
-
-Linux/Mac:
-  ./comfy.sh run sage              Launch ComfyUI with SageAttention
-  ./comfy.sh run flash             Launch with FlashAttention
-  ./comfy.sh update                Update everything (backup + git + sync)
-  ./comfy.sh backup                Create backup snapshot
-  ./comfy.sh restore               Restore from latest backup
-  ./comfy.sh sync                  Regenerate + lock + sync (automated!)
-  ./comfy.sh help                  Show all commands
-
-Windows:
-  comfy.bat run sage               Launch ComfyUI
-  comfy.bat update                 Update everything
-  comfy.bat sync                   Regenerate + lock + sync
-
-Customize:
-  1. Edit wrapper_config.toml
-  2. Run: ./comfy.sh sync          ← This is ALL you need!
-
-═══════════════════════════════════════════════════════════════════════
+└─ 📂 ComfyUI/                      ← UPSTREAM GIT REPOSITORY
+   ├─ pyproject.toml & requirements.txt
+   ├─ custom_nodes/                 (hosts Category A links & custom nodes)
+   └─ main.py
 """
-    
     print(structure)
 
 
