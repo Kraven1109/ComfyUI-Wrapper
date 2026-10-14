@@ -2,16 +2,37 @@
 # ComfyUI Workspace Unified CLI
 # Linux/macOS uses envs/linux/.venv
 ENV_DIR="envs/linux"
-# Use absolute workspace dir to avoid doubled-path bug when uv run changes cwd
-WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# Use absolute workspace dir (resolves symlinks so comfy can be invoked via PATH or symlinks)
+SCRIPT_SOURCE="$(readlink -f "${BASH_SOURCE[0]:-$0}" 2>/dev/null || realpath "${BASH_SOURCE[0]:-$0}" 2>/dev/null || echo "${BASH_SOURCE[0]:-$0}")"
+WORKSPACE_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 
-export UV_PROJECT_ENVIRONMENT="${HOME}/envs_AIO/comfyUI_DATA1/.venv"
-export VIRTUAL_ENV="${HOME}/envs_AIO/comfyUI_DATA1/.venv"
+# --- Environment & Hardlink Source of Truth ---
+export COMFY_VENV="${COMFY_VENV:-${HOME}/envs_AIO/comfyUI_DATA1/.venv}"
+export UV_PROJECT_ENVIRONMENT="$COMFY_VENV"
+export VIRTUAL_ENV="$COMFY_VENV"
+export UV_CACHE_DIR="${UV_CACHE_DIR:-${HOME}/.cache/uv}"
+export UV_LINK_MODE=hardlink
 # UV_PYTHON overrides UV_PROJECT_ENVIRONMENT — unset it so uv uses the correct project env
 unset UV_PYTHON
 
 echo "Using environment: $ENV_DIR"
+echo "Using venv:        $COMFY_VENV"
+echo "Using cache:       $UV_CACHE_DIR"
 
+# CUDA environment configuration
+if [ -d "/opt/cuda" ]; then
+    export CUDA_HOME="/opt/cuda"
+    export PATH="/opt/cuda/bin:$PATH"
+    export LD_LIBRARY_PATH="/opt/cuda/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
+# GCC 15 toolchain shim for PyTorch & CUDA extension compatibility
+if [ -d "$WORKSPACE_DIR/.tools/gcc15" ]; then
+    export PATH="$WORKSPACE_DIR/.tools/gcc15:$PATH"
+    export CUDAHOSTCXX="$WORKSPACE_DIR/.tools/gcc15/g++"
+    export CC="$WORKSPACE_DIR/.tools/gcc15/gcc"
+    export CXX="$WORKSPACE_DIR/.tools/gcc15/g++"
+fi
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 if ! command -v uv &> /dev/null; then
     echo "[INFO] uv not found. Installing..."

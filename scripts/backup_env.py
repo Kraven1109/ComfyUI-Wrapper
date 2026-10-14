@@ -19,9 +19,9 @@ def backup_env() -> None:
     timestamp = get_timestamp()
     
     lock_file = platform_env_dir / "uv.lock"
-    if not lock_file.exists():
-        print(f"Error: {lock_file} not found", file=sys.stderr)
-        sys.exit(1)
+    if not lock_file.exists() or lock_file.stat().st_size == 0:
+        print(f"[*] No valid uv.lock found at {platform_env_dir.relative_to(workspace_dir)}/uv.lock — skipping lock backup.")
+        return
     
     print("[*] Creating environment backup...")
     

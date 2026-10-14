@@ -2,10 +2,11 @@
 REM ComfyUI Workspace Unified CLI
 REM Windows uses envs/windows/.venv
 set ENV_DIR=envs\windows
-set COMFY_VENV=D:\envs_AIO_win\Comfy-env\.venv
+if not defined COMFY_VENV set COMFY_VENV=D:\envs_AIO_win\Comfy-env\.venv
 set UV_PROJECT_ENVIRONMENT=%COMFY_VENV%
 set VIRTUAL_ENV=%COMFY_VENV%
 set UV_LINK_MODE=hardlink
+set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 if not exist "D:\envs_AIO_win\Comfy-env" (
     mkdir "D:\envs_AIO_win\Comfy-env"

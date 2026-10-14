@@ -1,14 +1,14 @@
 [project]
 name = "ComfyUI"
-version = "0.34.0"
+version = "0.35.0"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = "==3.13.*"
 dependencies = [
     # Core ComfyUI dependencies (auto-synced from ComfyUI/requirements.txt)
-    "comfyui-frontend-package==1.49.6",
-    "comfyui-workflow-templates==0.11.48",
-    "comfyui-embedded-docs==0.5.10",
+    "comfyui-frontend-package==1.52.7",
+    "comfyui-workflow-templates==0.11.59",
+    "comfyui-embedded-docs==0.5.11",
     "torch",
     "torchsde",
     "torchvision",
@@ -30,8 +30,8 @@ dependencies = [
     "SQLAlchemy>=2.0.0",
     "filelock",
     "av>=17.0.0",
-    "comfy-kitchen==0.2.31",
-    "comfy-aimdo==0.4.15",
+    "comfy-kitchen==0.2.33",
+    "comfy-aimdo==0.5.3",
     "requests",
     "simpleeval>=1.0.0",
     "blake3",
@@ -191,6 +191,7 @@ torchvision = { index = "pytorch-cu132" }
 torchaudio = { index = "pytorch-test-cu132" }
 
 [tool.uv]
+find-links = ["../../wheels"]
 # Platform-specific lock for Windows only — prevents cross-platform resolution failures
 environments = ["sys_platform == 'win32'"]
 
