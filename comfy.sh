@@ -26,7 +26,7 @@ if [ -d "/opt/cuda" ]; then
     export LD_LIBRARY_PATH="/opt/cuda/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
 
-# GCC 15 toolchain shim for PyTorch & CUDA extension compatibility
+# GCC toolchain shim for PyTorch & CUDA extension compatibility
 if [ -d "$WORKSPACE_DIR/.tools/gcc15" ]; then
     export PATH="$WORKSPACE_DIR/.tools/gcc15:$PATH"
     export CUDAHOSTCXX="$WORKSPACE_DIR/.tools/gcc15/g++"
@@ -45,8 +45,6 @@ CUSTOM_NODES_DIR="$WORKSPACE_DIR/ComfyUI/custom_nodes"
 mkdir -p "$CUSTOM_NODES_DIR"
 
 # ── Auto-symlink custom node projects ──────────────────────────────────────
-# Always recreate symlinks so stale cross-platform links (e.g. Windows d:/ paths)
-# are automatically replaced. ln -sfn replaces an existing symlink atomically.
 declare -A CUSTOM_NODES=(
     ["ComfyUI-LLama"]="/DATA1/quang_dev/ComfyUI-LLama"
     ["ComfyUI-TTSS"]="/DATA1/quang_dev/comfyUI-TTSS"
@@ -61,13 +59,14 @@ for NODE_NAME in "${!CUSTOM_NODES[@]}"; do
         echo "[OK] Symlinked: $NODE_NAME → $SRC"
     fi
 done
-# ───────────────────────────────────────────────────────────────────────────
 
 # ── Auto-symlink model directories ─────────────────────────────────────────
 declare -A MODEL_DIRS=(
     ["LLM"]="/DATA2/llm/models"
 )
 MODELS_DIR="$WORKSPACE_DIR/ComfyUI/models"
+mkdir -p "$MODELS_DIR"
+
 for MODEL_NAME in "${!MODEL_DIRS[@]}"; do
     SRC="${MODEL_DIRS[$MODEL_NAME]}"
     DEST="$MODELS_DIR/$MODEL_NAME"
@@ -78,7 +77,6 @@ for MODEL_NAME in "${!MODEL_DIRS[@]}"; do
         echo "[OK] Model dir symlinked: $MODEL_NAME → $SRC"
     fi
 done
-# ───────────────────────────────────────────────────────────────────────────
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd "$WORKSPACE_DIR/$ENV_DIR" && exec uv run --no-sync python "../../scripts/cli.py" "$@"

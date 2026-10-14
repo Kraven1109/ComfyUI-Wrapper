@@ -1,6 +1,6 @@
 @echo off
 REM ComfyUI Workspace Unified CLI
-REM Windows uses envs/windows/.venv
+REM Windows uses envs\windows\.venv
 set ENV_DIR=envs\windows
 if not defined COMFY_VENV set COMFY_VENV=D:\envs_AIO_win\Comfy-env\.venv
 set UV_PROJECT_ENVIRONMENT=%COMFY_VENV%
@@ -12,26 +12,26 @@ if not exist "D:\envs_AIO_win\Comfy-env" (
     mkdir "D:\envs_AIO_win\Comfy-env"
 )
 
-REM UV_PYTHON overrides UV_PROJECT_ENVIRONMENT — unset it so uv uses the correct project env
-set UV_PYTHON=
-REM Resolve UV_ENV_FILE to absolute path if set, or unset if not found
+REM Safely clear UV_PYTHON so it doesn't leak outer-shell paths
+set "UV_PYTHON="
+
+REM Resolve UV_ENV_FILE to absolute path if set
 if defined UV_ENV_FILE (
     if exist "%~dp0%UV_ENV_FILE%" (
-        set UV_ENV_FILE=%~dp0%UV_ENV_FILE%
-    ) else if exist "%UV_ENV_FILE%" (
-        REM Keep absolute path
-    ) else (
-        set UV_ENV_FILE=
+        set "UV_ENV_FILE=%~dp0%UV_ENV_FILE%"
+    ) else if not exist "%UV_ENV_FILE%" (
+        set "UV_ENV_FILE="
     )
 )
-REM Replace backslashes with forward slashes to prevent uv path parsing issues
 if defined UV_ENV_FILE (
-    set UV_ENV_FILE=%UV_ENV_FILE:\=/%
+    set "UV_ENV_FILE=%UV_ENV_FILE:\=/%"
 )
+
 set UV_CACHE_DIR=D:\.cache_uv
 echo Using environment: %ENV_DIR%
 echo Cache dir: %UV_CACHE_DIR%
 if not exist "%UV_CACHE_DIR%" mkdir "%UV_CACHE_DIR%"
+
 set PATH=%USERPROFILE%\.local\bin;%USERPROFILE%\.cargo\bin;%PATH%
 where uv >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
@@ -53,12 +53,11 @@ if not exist "%CUSTOM_NODES_DIR%" mkdir "%CUSTOM_NODES_DIR%"
 
 call :symlink "ComfyUI-LLama"  "D:\quang_dev\ComfyUI-LLama"
 call :symlink "ComfyUI-TTSS"   "D:\quang_dev\comfyUI-TTSS"
-REM --------------------------------------------------------------------------
 
 REM -- Auto-symlink model directories ----------------------------------------
 set MODELS_DIR=%~dp0ComfyUI\models
+if not exist "%MODELS_DIR%" mkdir "%MODELS_DIR%"
 call :symlink_model "LLM" "E:\llm\models"
-REM --------------------------------------------------------------------------
 
 cd /d "%~dp0%ENV_DIR%" && uv run --no-sync python "%~dp0scripts\cli.py" %*
 goto :eof
@@ -70,8 +69,8 @@ set DEST=%CUSTOM_NODES_DIR%\%NODE_NAME%
 if not exist "%SRC%" (
     echo [WARN] Source not found, skipping: %SRC%
 ) else (
-    if exist "%DEST%" rmdir "%DEST%" 2>nul
-    if exist "%DEST%" del "%DEST%" 2>nul
+    if exist "%DEST%" rmdir "%DEST%" >nul 2>&1
+    if exist "%DEST%" del "%DEST%" >nul 2>&1
     mklink /J "%DEST%" "%SRC%" >nul 2>&1 && echo [OK] Linked: %NODE_NAME% ^> %SRC% || echo [WARN] Failed to link %NODE_NAME%
 )
 goto :eof
@@ -83,8 +82,8 @@ set DEST=%MODELS_DIR%\%MODEL_NAME%
 if not exist "%SRC%" (
     echo [WARN] Model source not found, skipping: %SRC%
 ) else (
-    if exist "%DEST%" rmdir "%DEST%" 2>nul
-    if exist "%DEST%" del "%DEST%" 2>nul
+    if exist "%DEST%" rmdir "%DEST%" >nul 2>&1
+    if exist "%DEST%" del "%DEST%" >nul 2>&1
     mklink /J "%DEST%" "%SRC%" >nul 2>&1 && echo [OK] Model dir linked: %MODEL_NAME% ^> %SRC% || echo [WARN] Failed to link %MODEL_NAME%
 )
 goto :eof
