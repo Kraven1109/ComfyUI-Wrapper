@@ -92,7 +92,8 @@ def generate_platform_pyproject(
     updated_lines: list[str] = []
     inserted = False
 
-    platform_python = wrapper_config.get("dependencies", {}).get(platform_key, {}).get("python")
+    deps_cfg = wrapper_config.get("dependencies", {})
+    platform_python = deps_cfg.get(platform_key, {}).get("python") or deps_cfg.get("python")
 
     for line in lines:
         if re.match(r"^\s*requires-python\s*=", line):
@@ -137,6 +138,9 @@ url = "{torchaudio_index_url}"
 explicit = true
 """
 
+    overrides: list[str] = wrapper_config.get("uv", {}).get("override_dependencies", [])
+    overrides_str = "[" + ", ".join(f'"{o}"' for o in overrides) + "]"
+
     uv_block = f"""{indices_block}
 [tool.uv.sources]
 torch = {{ index = "{pytorch_index_name}" }}
@@ -146,7 +150,7 @@ torchaudio = {{ index = "{torchaudio_index_name}" }}
 [tool.uv]
 find-links = ["../../wheels"]
 environments = ["sys_platform == '{platform_sys}'"]
-override-dependencies = []
+override-dependencies = {overrides_str}
 """
 
     extra_build_cfg = wrapper_config.get("uv", {}).get("extra_build_deps", {})
